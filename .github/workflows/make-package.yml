@@ -1,0 +1,51 @@
+name: Build and Publish Deb Package
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags: '*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install curl and jq
+      run: |
+        sudo apt-get update && sudo apt-get install -y curl jq
+
+    - name: Download llamafile binaries
+      run: |
+        bindir=${{ github.workspace }}/llamafile-deb/usr/local/bin
+        version=$(curl -s https://api.github.com/repos/Mozilla-Ocho/llamafile/releases/latest | jq -r '.tag_name')
+        mkdir -p ${bindir}
+        curl -L -o ${bindir}/llamafile "https://github.com/Mozilla-Ocho/llamafile/releases/download/${version}/llamafile-${version}"
+        curl -L -o ${bindir}/zipalign "https://github.com/Mozilla-Ocho/llamafile/releases/download/${version}/zipalign-${version}"
+        curl -L -o ${bindir}/llamafile-tokenize "https://github.com/Mozilla-Ocho/llamafile/releases/download/${version}/llamafile-tokenize"
+        chmod +755 ${bindir}/llamafile* ${bindir}/zipalign
+
+    - name: Create Deb package
+      uses: jiro4989/build-deb-action@v3
+      with:
+        package: llamafile-utils 
+        package_root: llamafile-deb
+        maintainer: "VicenDominguez [https://github.com/vicendominguez]" 
+        version: ${{ github.ref }}
+        arch: 'amd64'
+        desc: |
+          Llamafile tools: 
+          * llamafile binary
+          * zipalign tool 
+          * llamafile-tokenize binary
+        depends: libc6 (>= 2.13-12)
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: llamafile-utils*
