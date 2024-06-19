@@ -22,7 +22,7 @@ curl -Ls https://github.com/vicendominguez/llamafile-utils/releases/download/0.8
 sudo dpkg -i /tmp/llamafile-utils_0.8.1_amd64.deb && rm /tmp/llamafile-utils_0.8.1_amd64.deb
 ```
 
-## Internals: How to create new deb version
+## Internals: How to create a new deb pkg version
 
  - create a tag here using `git tag` with the same [llamafile binaries version](https://github.com/Mozilla-Ocho/llamafile/releases)
  - `git push --tags` 
